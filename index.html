@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="מתקרבים לזוגות">
+    <meta name="apple-mobile-web-app-title" content="מתקרבים לזוגות">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no">
+    <meta name="description" content="משחק שיחות עומק, היכרות והעצמה לחיזוק הקשר וההתחברות הרגשית. שאלות, רגשות, ופרסים ליצירת חוויה בלתי נשכחת.">
+    <meta name="keywords" content="משחק זוגי, היכרות, שאלות שיתוף, העצמה, תקשורת, פרסים">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💞</text></svg>">
+
+    <title>מתקרבים </title>
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap');
+        :root {
+            --primary-glow: #8A2BE2; /* BlueViolet */
+            --secondary-glow: #FF00FF; /* Magenta */
+            --accent-color: #FFD700; /* Gold */
+            --text-dark: #EAEAEA;
+            --text-light: #C0C0C0;
+            --container-bg: rgba(10, 5, 20, 0.75);
+            --border-glow: rgba(138, 43, 226, 0.6);
+            --success-color: #00FF7F; /* SpringGreen */
+            --danger-color: #FF6347; /* Tomato */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        html, body { height: 100%; overflow: hidden; position: fixed; width: 100%; }
+
+        body {
+font-family: 'Rubik', sans-serif;
+            background: #00000a;
+            display: flex; justify-content: center; align-items: center;
+            perspective: 1200px;
+            transition: background-color 0.8s ease-in-out;
+        }
+
+        /* --- רקע כוכבים אנימטיבי --- */
+        @keyframes move-twinkle-back { from {background-position:0 0;} to {background-position:-10000px 5000px;} }
+        .stars, .twinkling {
+            position:absolute; top:0; left:0; right:0; bottom:0; width:100%; height:100%; display:block;
+        }
+        .stars { background:#000 url(https://www.script-tutorials.com/demos/360/images/stars.png) repeat top center; z-index:-3; }
+        .twinkling{ background:transparent url(https://www.script-tutorials.com/demos/360/images/twinkling.png) repeat top center; z-index:-2; animation:move-twinkle-back 200s linear infinite; }
+
+        /* --- מסך טעינה דרמטי ומשודרג --- */
+        .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; transition: opacity 1s ease, filter 1s ease; overflow: hidden; }
+        @keyframes nebula-spin { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+        .loading-screen::before, .loading-screen::after {
+            content: ''; position: absolute; left: 50%; top: 50%; width: 150vmax; height: 150vmax;
+            background-image: radial-gradient(circle, var(--primary-glow) 0%, rgba(138,43,226,0) 60%);
+            animation: nebula-spin 40s linear infinite;
+        }
+        .loading-screen::after {
+            width: 120vmax; height: 120vmax;
+            background-image: radial-gradient(circle, var(--secondary-glow) 0%, rgba(255,0,255,0) 55%);
+            animation-duration: 35s; animation-direction: reverse;
+        }
+        .loading-logo { font-size: 6em; margin-bottom: 20px; animation: dramaticLogoPulse 3s ease-in-out infinite; text-shadow: 0 0 15px #fff, 0 0 30px var(--primary-glow), 0 0 50px var(--secondary-glow); z-index: 1; }
+        @keyframes dramaticLogoPulse { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.2); opacity: 1; } }
+        .loading-title, .loading-subtitle, .loading-progress-container { z-index: 1; }
+        .loading-title { color: white; font-size: 3em; font-weight: 700; margin-bottom: 10px; text-shadow: 0 0 10px var(--primary-glow); }
+        .loading-subtitle { color: black(--text-light); font-size: 1.3em; margin-bottom: 40px; }
+        .loading-progress-container { display: flex; align-items: center; gap: 20px; justify-content: center; }
+        .loading-progress { width: min(400px, 80vw); height: 12px; background: rgba(255, 255, 255, 0.1); border-radius: 15px; overflow: hidden; border: 1px solid var(--border-glow); }
+        .loading-bar { height: 100%; background: linear-gradient(90deg, var(--primary-glow), var(--secondary-glow)); border-radius: 15px; width: 0%; transition: width 0.4s ease-out, background 0.8s ease-in-out; box-shadow: 0 0 10px var(--secondary-glow); }
+        .loading-percentage { color: white; font-size: 1.6em; font-weight: 700; min-width: 60px; }
+        .loading-screen.fade-out { opacity: 0; filter: blur(10px); }
+
+        /* --- קונטיינר תלת מימדי ויוקרתי --- */
+        .container {
+            background: var(--container-bg); backdrop-filter: blur(15px); border-radius: 25px; padding: 25px 30px;;
+            max-width: 900px; width: 95%; text-align: center; border: 2px solid transparent; background-clip: padding-box;
+            border-image: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)) 1;
+            box-shadow: 0 0 25px rgba(138, 43, 226, 0.3), 0 0 50px rgba(255, 0, 255, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.1);
+            max-height: 90vh; overflow-y: auto; color: var(--text-dark);
+            opacity: 0; 
+            transform: rotateY(0) rotateX(0) translateZ(0); 
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.8s ease-in-out, border-image 0.8s ease-in-out, opacity 0.5s ease-in-out;
+        }
+        @media (hover: hover) {
+            .container:hover {
+                transform: rotateY(-1.5deg) rotateX(1.5deg) scale(1.02);
+                box-shadow: 0 10px 45px rgba(138, 43, 226, 0.4), 0 10px 70px rgba(255, 0, 255, 0.3), inset 0 0 15px rgba(255, 255, 255, 0.1);
+            }
+        }
+        @keyframes containerFadeIn { to { opacity: 1; } }
+
+        h1 { background: linear-gradient(135deg, var(--secondary-glow), var(--primary-glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; font-size: 2.4em; text-shadow: 0 2px 15px var(--primary-glow); transition: all 0.8s ease-in-out; }
+        h2 { color: var(--text-dark); font-size: 1.8em; margin-bottom: 15px; font-weight: 500; }
+
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.7s ease-in-out forwards; }
+        .screen.exiting { animation: fadeOut 0.5s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes fadeOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-30px) scale(0.98); } }
+
+        .input-group { margin-bottom: 20px; text-align: right; }
+        .input-group label { display: block; margin-bottom: 8px; font-size: 1.2em; font-weight: 500; color: var(--text-light); }
+        .input-group input { width: 100%; padding: 15px; background: rgba(0, 0, 0, 0.3); border: 2px solid var(--border-glow); color: var(--text-dark); border-radius: 15px; font-size: 1.2em; text-align: right; transition: all 0.8s ease; }
+        .input-group input:focus { box-shadow: 0 0 15px var(--primary-glow); border-color: var(--secondary-glow); }
+
+        .main-btn { background: linear-gradient(135deg, var(--primary-glow) 0%, var(--secondary-glow) 100%); color: white; border: none; padding: 18px 40px; font-size: 1.4em; font-weight: 600; border-radius: 60px; cursor: pointer; transition: all 0.8s ease-in-out, transform 0.4s ease; box-shadow: 0 0 15px rgba(138, 43, 226, 0.5), 0 0 25px rgba(255, 0, 255, 0.3); margin-top: 25px; text-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .main-btn:hover, .main-btn:focus { transform: translateY(-3px) scale(1.03); box-shadow: 0 0 25px rgba(138, 43, 226, 0.8), 0 0 40px rgba(255, 0, 255, 0.5); outline: none; }
+        .secondary-btn { background: linear-gradient(135deg, #FFD700, #FFA500); color: #2d3748; border: none; padding: 12px 25px; font-size: 1.1em; border-radius: 25px; cursor: pointer; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); transition: all 0.3s ease; font-weight: 600; }
+        .secondary-btn:hover, .secondary-btn:focus { transform: scale(1.05); box-shadow: 0 0 20px rgba(255, 215, 0, 0.7); outline: none; }
+
+        .current-player-display { padding: 20px; border-radius: 15px; margin-bottom: 25px; border: 2px solid; transition: background 0.8s ease-in-out, border-color 0.8s ease-in-out, box-shadow 0.8s ease-in-out; }
+        .current-player-display.husband { background: rgba(99, 179, 237, 0.15); border-color: #63B3ED; box-shadow: inset 0 0 15px rgba(99, 179, 237, 0.3); }
+        .current-player-display.wife { background: rgba(246, 173, 85, 0.15); border-color: #F6AD55; box-shadow: inset 0 0 15px rgba(246, 173, 85, 0.3); }
+        
+        .result-container { margin-top: 30px; padding: 30px; background: rgba(0, 0, 0, 0.2); border-radius: 20px; min-height: 120px; display: flex; align-items: center; justify-content: center; transition: all 0.5s ease-in-out; }
+        #result { transition: opacity 0.4s ease; width: 100%; }
+        
+        .question-text { font-size: 1.5em; line-height: 1.6; color: var(--text-light); text-align: center; }
+
+        .emotion-highlight { display: inline; vertical-align: baseline; color: var(--accent-color); font-weight: 700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.7); padding: 0 4px; margin: 0 2px; border-radius: 8px; }
+        .partner-name-highlight { font-weight: 700; color: var(--accent-color); text-shadow: 0 0 8px rgba(255, 215, 0, 0.7); }
+
+        .placeholder-text { font-style: italic; color: var(--text-light); }
+        @keyframes pulse-glow { 0%, 100% { opacity: 0.8; text-shadow: 0 0 10px rgba(255, 215, 0, 0.7); } 50% { opacity: 1; text-shadow: 0 0 25px rgba(255, 215, 0, 1); } }
+        .drawing-animation { animation: pulse-glow 1.8s ease-in-out infinite; }
+        
+        @keyframes quickFadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes quickFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .quick-fade-in { animation: quickFadeIn 0.5s ease-in forwards; }
+
+        #change-buttons, #difficulty-container { display: none; margin-top: 20px; gap: 15px; justify-content: center; flex-wrap: wrap;}
+        
+        .scoring-stage-container { display: none; }
+        .scoring-stage-container.active { display: block; }
+        .scoring-container { margin: 30px 0; }
+        .scoring-container label { font-size: 1.1em; font-weight: 500; margin-bottom: 15px; display: block; }
+        .scoring-input-wrapper { display: flex; align-items: center; gap: 20px; }
+        .scoring-input-wrapper input[type="range"] { -webkit-appearance: none; appearance: none; flex-grow: 1; cursor: pointer; background: transparent; }
+        .scoring-input-wrapper input[type="range"]::-webkit-slider-runnable-track { height: 8px; background: linear-gradient(90deg, var(--primary-glow), var(--secondary-glow)); border-radius: 8px; transition: background 0.8s ease-in-out; }
+        .scoring-input-wrapper input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; margin-top: -6px; background: var(--accent-color); height: 20px; width: 20px; border-radius: 50%; box-shadow: 0 0 10px rgba(255, 215, 0, 0.8); transition: transform 0.2s ease; }
+        .scoring-input-wrapper input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.2); }
+        .score-display { font-weight: 700; color: var(--accent-color); font-size: 1.8em; min-width: 50px; text-align: center; background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border-glow); }
+        
+        .instructions-text { text-align: right; line-height: 1.8; font-size: 1.1em; margin-bottom: 25px; color: var(--text-light); }
+        
+        #final-scores h2 { color: var(--text-dark); }
+        #winner-announcement h3 { font-size: 1.7em; margin-bottom: 20px; text-shadow: 0 0 10px var(--success-color); color: var(--success-color); }
+        #loser-prize-task, #winner-prize-task { padding: 20px; border-radius: 15px; margin-top: 20px; line-height: 1.7; background-color: rgba(0, 0, 0, 0.4); border: 1px solid; color: var(--text-dark); transition: all 0.8s ease-in-out; }
+        #loser-prize-task { border-color: var(--accent-color); }
+        #winner-prize-task { border-color: var(--success-color); }
+        #loser-prize-task strong { color: var(--accent-color); text-shadow: 0 0 5px var(--accent-color); }
+        #winner-prize-task strong { color: var(--success-color); text-shadow: 0 0 5px var(--success-color); }
+        
+        #extraction-error-screen { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10001; width: 90%; max-width: 600px; flex-direction: column; justify-content: center; align-items: center; padding: 40px; color: var(--text-dark); background: var(--container-bg); border: 2px solid var(--danger-color); border-radius: 25px; text-align: center; box-shadow: 0 0 25px rgba(255, 99, 71, 0.5); }
+        #extraction-error-screen h1 { font-size: 3em; margin-bottom: 20px; }
+        #extraction-error-screen p { font-size: 1.2em; line-height: 1.7; color: var(--text-light); }
+
+        /* --- תיקונים למסך הפתיחה כדי למנוע גלילה --- */
+        #instructions-screen h1 { font-size: 2.1em; margin-bottom: 15px; }
+        #instructions-screen h2 { font-size: 1.6em; margin-bottom: 10px; }
+        #instructions-screen .instructions-text { font-size: 1.0em; line-height: 1.65; margin-bottom: 20px; }
+        #instructions-screen .main-btn { margin-top: 15px; }
+        
+        /* --- עיצוב מעברון השלב --- */
+        #stage-transition-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 10, 0.95); z-index: 20000; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; opacity: 0; transition: opacity 0.5s ease-in-out; }
+        #stage-transition-screen.visible { display: flex; opacity: 1; }
+        #stage-transition-title { font-size: 3.5em; font-weight: 700; margin-bottom: 15px; animation: fadeInDown 1s both; background: linear-gradient(135deg, var(--secondary-glow), var(--primary-glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 2px 15px var(--primary-glow);}
+        #stage-transition-description { font-size: 1.5em; color: var(--text-light); margin-bottom: 40px; animation: fadeInUp 1s 0.3s both; }
+        #stage-transition-icon { font-size: 4em; animation: dramaticLogoPulse 2.5s infinite ease-in-out; text-shadow: 0 0 15px var(--primary-glow), 0 0 30px var(--secondary-glow); }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-50px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- פלטות צבעים דינמיות לשלבים --- */
+        body.stage-acquaintance { --primary-glow: #8A2BE2; --secondary-glow: #FF00FF; --border-glow: rgba(138, 43, 226, 0.6); }
+        body.stage-sharing { --primary-glow: #FF8C00; --secondary-glow: #FFD700; --border-glow: rgba(255, 140, 0, 0.6); }
+        body.stage-empowerment { --primary-glow: #00FF7F; --secondary-glow: #40E0D0; --border-glow: rgba(0, 255, 127, 0.6); --success-color: #40E0D0; }
+
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="twinkling"></div>
+
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-logo">💞</div>
+        <div class="loading-title">מתקרבים</div>
+        <div class="loading-subtitle">חוויה זוגית מיוחדת נטענת...</div>
+        <div class="loading-progress-container">
+            <div class="loading-progress">
+                <div class="loading-bar" id="loading-bar"></div>
+            </div>
+            <div class="loading-percentage" id="loading-percentage">0%</div>
+        </div>
+    </div>
+    
+    <div id="extraction-error-screen">
+        <h1>🛠️ שגיאה בטעינת קבצים 🛠️</h1>
+        <p>נראה שפתחת את המשחק ישירות מקובץ ZIP.</p>
+        <p style="margin-top: 15px;">כדי שהמשחק יעבוד כמו שצריך, יש <strong>לחלץ את כל הקבצים</strong> מהתיקייה הדחוסה (ZIP) לתיקייה רגילה במחשב, ורק אז לפתוח את קובץ המשחק.</p>
+        <div style="font-size: 4em; margin-top: 25px;">💞</div>
+    </div>
+
+    <div class="container" id="main-container" style="opacity:0;">
+        <div id="instructions-screen" class="screen">
+            <h1>ברוכים הבאים ל'מתקרבים'</h1>
+            <h2 style="font-size: 1.5em;">איך המשחק עובד?</h2>
+            <p class="instructions-text">
+               המשחק בנוי משלושה שלבים, ובכל שלב 8 סבבים (ארבעה סבבים לכל אחד):
+               <br><br>
+               <strong>שלב 1: מבחן ההיכרות</strong> - כל אחד בתורו יענה על שאלה שבוחנת כמה הוא מכיר את השני. בן/בת הזוג ידרג עד כמה התשובה הייתה קרובה לאמת.
+               <br><br>
+               <strong>שלב 2: שאלות שיתוף</strong> - שלב שנועד לעורר שיח מעמיק ומקרב. כל אחד ישתף בכנות בתחושותיו וזכרונותיו.
+                <br><br>
+               <strong>שלב 3: שאלות העצמה</strong> - שלב הפרגון! כל אחד יקבל הזדמנות להעצים את השני, ולציין את הטוב והיפה שבו.
+            </p>
+            <h2 style="font-size: 1.8em;">תיהנו מהדרך המשותפת!</h2>
+            <button class="main-btn" onclick="proceedToSetup()">בואו נתחיל!</button>
+        </div>
+
+        <div id="setup-screen" class="screen">
+            <h1>הזוג המאושר</h1>
+            <div class="input-group">
+                <label for="husband-name">הבעל היקר:</label>
+                <input type="text" id="husband-name" placeholder="הכנס את שמך">
+            </div>
+            <div class="input-group">
+                <label for="wife-name">האישה היקרה:</label>
+                <input type="text" id="wife-name" placeholder="הכניסי את שמך">
+            </div>
+            <button class="main-btn" onclick="proceedToHusbandPrize()">לשלב הבא</button>
+        </div>
+
+        <div id="husband-prize-screen" class="screen">
+            <h1 id="husband-prize-title">🎁 הפרס שלך</h1>
+            <h3>מהי המתנה שהיית רוצה לקבל מאשתך אם תנצח במשחק? תכתוב כאן בלי שהיא תסתכל...</h3>
+            <div class="input-group">
+                <label for="husband-prize">המתנה שאני רוצה:</label>
+                <input type="text" id="husband-prize" placeholder="לדוגמה: מסאז' של 10 דקות">
+            </div>
+            <button class="main-btn" onclick="proceedToWifePrize()">סיימת? עכשיו תורה לענות</button>
+        </div>
+
+        <div id="wife-prize-screen" class="screen">
+            <h1 id="wife-prize-title">🎁 הפרס שלך</h1>
+            <h3>עכשיו תורך, כתבי בסוד איזו מתנה תרצי לקבל ממנו.</h3>
+            <div class="input-group">
+                <label for="wife-prize">המתנה שאני רוצה:</label>
+                <input type="text" id="wife-prize" placeholder="לדוגמה: פינוק מתוק שאני אוהבת">
+            </div>
+            <button class="main-btn" onclick="startGame()">שומרת ומתחילים לשחק! 🎯</button>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="current-player-display" id="current-player-display"><h2 id="turn-indicator"></h2><p id="turn-prompt"></p></div>
+            <div class="result-container">
+                <div id="result" class="placeholder-text">לחצו על הכפתור...</div>
+            </div>
+            <div style="margin-top: 25px;"><button class="main-btn" id="draw-btn" onclick="drawQuestion()"></button></div>
+            <div id="difficulty-container"><button class="secondary-btn" onclick="showChangeOptions()">🤔 אמממ... קשה לי לענות...</button></div>
+            <div id="change-buttons"><button class="secondary-btn" onclick="changeQuestion()">🔄 שאלה אחרת על הרגש הזה</button><button class="secondary-btn" onclick="changeEmotion()">🌈 אותה שאלה על רגש אחר</button></div>
+            <button class="main-btn" id="finish-turn-btn" onclick="finishTurn()" style="display: none; background: linear-gradient(135deg, var(--success-color), #2f855a);"></button>
+        </div>
+
+        <div id="scoring-screen" class="screen">
+            <h2 id="scoring-title"></h2>
+            
+            <div id="acquaintance-scoring" class="scoring-stage-container">
+                <div class="scoring-container">
+                    <label id="acquaintance-label" for="acquaintance-score"></label>
+                    <div class="scoring-input-wrapper">
+                        <input type="range" id="acquaintance-score" min="1" max="5" value="3" oninput="updateScoreDisplay('acquaintance-score', 'acquaintance-display')">
+                        <span id="acquaintance-display" class="score-display">3</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sharing-scoring" class="scoring-stage-container">
+                <div class="scoring-container">
+                    <label id="honesty-label" for="honesty-score"></label>
+                    <div class="scoring-input-wrapper">
+                        <input type="range" id="honesty-score" min="1" max="10" value="5" oninput="updateScoreDisplay('honesty-score', 'honesty-display')">
+                        <span id="honesty-display" class="score-display">5</span>
+                    </div>
+                </div>
+                <div class="scoring-container">
+                    <label id="insight-label" for="insight-score"></label>
+                    <div class="scoring-input-wrapper">
+                        <input type="range" id="insight-score" min="1" max="10" value="5" oninput="updateScoreDisplay('insight-score', 'insight-display')">
+                        <span id="insight-display" class="score-display">5</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="empowerment-scoring" class="scoring-stage-container">
+                 <div class="scoring-container">
+                    <label id="empowerment-label" for="empowerment-score"></label>
+                    <div class="scoring-input-wrapper">
+                        <input type="range" id="empowerment-score" min="1" max="10" value="5" oninput="updateScoreDisplay('empowerment-score', 'empowerment-display')">
+                        <span id="empowerment-display" class="score-display">5</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="main-btn" onclick="submitScore()">העבר את התור</button>
+        </div>
+
+        <div id="end-screen" class="screen">
+             <h1>💖 סיום המשחק 💖</h1>
+            <div id="final-scores"></div>
+            <div id="winner-announcement"></div>
+            <div id="loser-prize-task"></div>
+            <div id="winner-prize-task"></div>
+            <p style="margin-top: 30px; font-size: 1.4em; font-style: italic; color: var(--secondary-glow);">כל הכבוד! המתנה האמיתית היא הפתיחות, ההקשבה וההיכרות המחודשת.</p>
+        </div>
+    </div>
+
+    <div id="stage-transition-screen">
+        <h1 id="stage-transition-title"></h1>
+        <p id="stage-transition-description"></p>
+        <div id="stage-transition-icon"></div>
+    </div>
+
+    <script>
+// =================== מאגרי שאלות ורגשות ===================
+const acquaintanceQuestions_forHusband=[{name:"איזה מאכל {name} יכולה לאכול כל יום?"},{name:"איזה מאכל {name} לא יכולה לסבול?"},{name:"איך {name} שותה את הקפה שלה?"},{name:"איך {name} מעדיפה לבלות ערב חופשי?"},{name:"איזה זמר {name} הכי אוהבת?"},{name:"אם היה ל{name} 5,000 ש\"ח פנויים, מה היא הייתה עושה איתם?"},{name:"מה השעה הכי אהובה על {name} ביום?"},{name:"על איזה חפץ {name} לא הייתה מוותרת?"},{name:"מה הפינה האהובה על {name} בבית?"},{name:"מה החג ש{name} הכי אוהבת – ולמה?"},{name:"מה ההישג ש{name} הכי גאה בו?"},{name:"מהו המקום המושלם לחופשה בעיני {name}?"},{name:"מה הדבר שהכי מלחיץ את {name} בתקופה האחרונה?"},{name:"איזו תכונה אישיותית {name} הכי רוצה לפתח בעצמה?"},{name:"מי האדם שהכי השפיע על {name} בחיים?"},{name:"מה {name} הכי אוהבת בעבודה שלה (או הכי שונאת)?"},{name:"מה החלום המקצועי או האישי של {name} שעדיין לא התממש?"},{name:"ממה {name} הכי מתרגשת? (גם אם לא תודה בזה בקול רם...)"},{name:"אם היה ל{name} יום פנוי לגמרי – בלי שום התחייבויות – מה היא הייתה עושה?"},{name:"איזו פדיחה קטנה קרתה ל{name} ועד היום נזכרים בה וצוחקים?"}];
+const acquaintanceQuestions_forWife=[{name:"איזה מאכל {name} יכול לאכול כל יום?"},{name:"איזה מאכל {name} לא יכול לסבול?"},{name:"איך {name} שותה את הקפה שלו?"},{name:"איך {name} מעדיף לבלות ערב חופשי?"},{name:"איזה זמר {name} הכי אוהב?"},{name:"מה השעה הכי אהובה על {name} ביום?"},{name:"על איזה חפץ {name} לא היה מוותר?"},{name:"מה הפינה האהובה על {name} בבית?"},{name:"מה החג ש{name} הכי אוהב – ולמה?"},{name:"אם היה ל{name} 5,000 ש\"ח פנויים, מה הוא היה עושה איתם?"},{name:"מה ההישג ש{name} הכי גאה בו?"},{name:"מהו המקום המושלם לחופשה בעיני {name}?"},{name:"מה הדבר שהכי מלחיץ את {name} בתקופה האחרונה?"},{name:"איזו תכונה אישיותית {name} הכי רוצה לפתח בעצמו?"},{name:"מי האדם שהכי השפיע על {name} בחיים?"},{name:"מה {name} הכי אוהב בעבודה שלו (או הכי שונא)?"},{name:"מה החלום המקצועי או האישי של {name} שעדיין לא התממש?"},{name:"ממה {name} הכי מתרגש? (גם אם לא יודה בזה בקול רם...)"},{name:"אם היה ל{name} יום פנוי לגמרי – בלי שום התחייבויות – מה הוא היה עושה?"},{name:"איזו פדיחה קטנה קרתה ל{name} ועד היום נזכרים בה וצוחקים?"}];
+const emotionGroup1=["שמחה","ביטחון","גאווה","תקווה","אהבה","שייכות","רוגע","סיפוק","שלווה","נחישות","סקרנות","חיוניות","העצמה","אופטימיות"],emotionGroup2=["תסכול","בושה","קנאה","אכזבה","פחד","עצב","בדידות","חרטה","בלבול","חוסר אונים","כעס","חרדה","ייאוש","אשמה","טינה","מרירות","ריקנות","פגיעות","השפלה","הצפה","גועל","חשדנות","דחייה","עלבון"],emotionGroup3=["התרגשות","הקלה","הכרת תודה","השתאות","תשוקה","געגוע","עצבנות","התפעמות","חמלה","נוסטלגיה","הפתעה","ציפייה","יראת כבוד","מבוכה","הזדהות"],allEmotions=[...emotionGroup1,...emotionGroup2,...emotionGroup3],questionPoolA_male=["מתי הרגשת לאחרונה ___?","ספר על מקרה מהילדות שבו הרגשת ___.","תאר סיטואציה שבה הופתעת מהעוצמה של ה___ שהרגשת.","מה גרם לך להרגיש ___ בפעם האחרונה?","מה אתה נוטה לעשות כשאתה מרגיש ___?","איך אתה נראה כלפי חוץ כשאתה מרגיש ___?","מה עובר לך בראש כשאתה מרגיש ___?","מתי אתה מרשה לעצמך להרגיש ___?","האם אתה מרגיש בנוח לדבר על ___? עם מי כן או לא?","האם יש אדם מסוים שמעורר אצלך ___?","מה אתה רוצה שאחרים ידעו עליך כשאתה מרגיש ___?","מה למדת על עצמך דרך חוויה של ___?","מהו הזיכרון הראשון שלך שקשור ל___?"],questionPoolA_female=["מתי הרגשת לאחרונה ___?","ספרי על מקרה מהילדות שבו הרגשת ___.","תארי סיטואציה שבה הופתעת מהעוצמה של ה___ שהרגשת.","מה גרם לך להרגיש ___ בפעם האחרונה?","מה את נוטה לעשות כשאת מרגישה ___?","איך את נראית כלפי חוץ כשאת מרגישה ___?","מה עובר לך בראש כשאת מרגישה ___?","מתי את מרשה לעצמך להרגיש ___?","האם את מרגישה בנוח לדבר על ___? עם מי כן או לא?","האם יש אדם מסוים שמעורר אצלך ___?","מה את רוצה שאחרים ידעו עלייך כשאת מרגישה ___?","מה למדת על עצמך דרך חוויה של ___?","מהו הזיכרון הראשון שלך שקשור ל___?"],questionPoolB_male=[...questionPoolA_male,"איזו תקופה בחיים שלך הייתה מלאה ב___?","עם מי בחיים שלך אתה מרגיש הכי ___?","באיזו עבודה או פעילות אתה מרגיש הכי הרבה ___?","איזה מקום מזכיר לך תחושה של ___?","אילו דרכים עוזרות לך להתמודד עם ___?","איך אתה מתנהג כשמישהו אחר סביבך מרגיש ___?","האם אתה מרגיש אשמה כשאתה מרגיש ___?","באיזה תחום בחיים שלך היית רוצה להתמודד אחרת עם ___?","אילו דברים אתה עושה כדי לא להרגיש ___?","מה היית רוצה שיגידו לך ברגע של ___?","האם אתה מתבייש בתחושה של ___?","עם מי קשה לך להיות כשאתה מרגיש ___?","איך ___ משפיע על קבלת ההחלטות שלך?","מה הדבר הכי פחות מועיל שאפשר להגיד לך כשאתה חווה ___?","האם אי פעם השתמשת ב___ כמניע לפעולה חיובית?","האם יש צד חיובי או תועלת ברגש ה___?"],questionPoolB_female=[...questionPoolA_female,"איזו תקופה בחיים שלך הייתה מלאה ב___?","עם מי בחיים שלך את מרגישה הכי ___?","באיזו עבודה או פעילות את מרגישה הכי הרבה ___?","איזה מקום מזכיר לך תחושה של ___?","אילו דרכים עוזרות לך להתמודד עם ___?","איך את מתנהגת כשמישהו אחר סביבך מרגיש ___?","האם את מרגישה אשמה כשאת מרגישה ___?","באיזה תחום בחיים שלך היית רוצה להתמודד אחרת עם ___?","אילו דברים את עושה כדי לא להרגיש ___?","מה היית רוצה שיגידו לך ברגע של ___?","האם את מתביישת ב___?","עם מי קשה לך להיות כשאת מרגישה ___?","איך ___ משפיע על קבלת ההחלטות שלך?","מה הדבר הכי פחות מועיל שאפשר להגיד לך כשאת חווה ___?","האם אי פעם השתמשת ב___ כמניע לפעולה חיובית?","האם יש צד חיובי או תועלת ברגש ה___?"],questionPoolC_male=[...questionPoolA_male,"איזו תקופה בחיים שלך הייתה מלאה ב___?","עם מי בחיים שלך אתה מרגיש הכי ___?","באיזו עבודה או פעילות אתה מרגיש הכי הרבה ___?","איזה מקום מזכיר לך תחושה של ___?","ספר על רגע שבו חווית ___ יחד עם אדם אחר, וזה חיבר ביניכם.","איזה שיר או יצירת אמנות מעוררים בך ___?","לו יכולת להגביר או להנמיך את עוצמת ה___ בחייך, מה היית בוחר?"],questionPoolC_female=[...questionPoolA_female,"איזו תקופה בחיים שלך הייתה מלאה ב___?","באיזה אופן ___ הוא חלק מהאישיות שלך?","עם מי בחיים שלך את מרגישה הכי ___?","באיזו עבודה או פעילות את מרגישה הכי הרבה ___?","איזה מקום מזכיר לך תחושה של ___?","ספרי על רגע שבו חווית ___ יחד עם אדם אחר, וזה חיבר ביניכם.","איזה שיר או יצירת אמנות מעוררים בך ___?","לו יכולת להגביר או להנמיך את עוצמת ה___ בחייך, מה היית בוחרת?"],empowermentQuestions_forHusband=[{name:"ספר על רגע ספציפי השבוע שבו הערכת במיוחד משהו ש{name} עשתה."},{name:"שתף בזיכרון שלכם יחד שבו הרגשת הכי גאה ב{name}."},{name:"איזו יכולת או כישרון יש ל{name} שלדעתך העולם צריך להכיר יותר?"},{name:"מה הדבר הכי יפה ש{name} אמרה לך פעם, שאתה עדיין זוכר?"},{name:"באיזה מצב הרגשת ש{name} נתנה לך כוח שהיית צריך?"},{name:"אם היית צריך לתת ל{name} פרס או מדליה, על מה זה היה?"},{name:"מהו הדבר הקטן ש{name} עושה, והוא ממלא אותך אושר?"},{name:"ציין תכונה או יכולת אצל {name} שלדעתך היא לא מספיק מעריכה בעצמה."}],empowermentQuestions_forWife=[{name:"ספרי על רגע ספציפי השבוע שבו הערכת במיוחד משהו ש{name} עשה."},{name:"שתפי בזיכרון שלכם יחד שבו הרגשת הכי גאה ב{name}."},{name:"איזו יכולת או כישרון יש ל{name} שלדעתך העולם צריך להכיר יותר?"},{name:"מה הדבר הכי יפה ש{name} אמר לך פעם, שאת עדיין זוכרת?"},{name:"באיזה מצב הרגשת ש{name} נתן לך כוח שהיית צריכה?"},{name:"אם היית צריכה לתת ל{name} פרס או מדליה, על מה זה היה?"},{name:"מהו הדבר ש{name} עושה, והוא ממלא אותך אושר?"},{name:"צייני תכונה או יכולת אצל {name} שלדעתך הוא לא מספיק מעריך בעצמו."}];
+
+let husband={},wife={},currentPlayer="husband",currentRound=1,maxRounds=24,currentQuestion,currentEmotion,tempAcquaintanceHusband,tempAcquaintanceWife,tempEmpowermentHusband,tempEmpowermentWife;
+// =================== START: THIS SECTION WAS MODIFIED ===================
+const soundStartOrDraw=new Audio("Sound files/1.mp3"),soundSuccess=new Audio("Sound files/2.mp3"),soundError=new Audio("Sound files/3.mp3"),soundChange=new Audio("Sound files/4.mp3"),soundEndGame=new Audio("Sound files/5.mp3"),soundStageTransition=new Audio("Sound files/6.mp3");
+// =================== END: THIS SECTION WAS MODIFIED ===================
+
+const stageThemes = {
+    acquaintance: { className: 'stage-acquaintance', title: 'שלב 1: מבחן ההיכרות', description: 'מגלים כמה אתם באמת מכירים', icon: '❓' },
+    sharing: { className: 'stage-sharing', title: 'שלב 2: שאלות שיתוף', description: 'נכנסים לעומק, משתפים ומתקרבים', icon: '💬' },
+    empowerment: { className: 'stage-empowerment', title: 'שלב 3: שאלות העצמה', description: 'הזמן להרים, לפרגן ולהעצים', icon: '🌟' }
+};
+
+function switchScreen(screenId) {
+    const activeScreen = document.querySelector(".screen.active");
+    const newScreen = document.getElementById(screenId);
+    if (!newScreen || newScreen === activeScreen) return;
+    
+    if (activeScreen) activeScreen.style.animation = '';
+    if (newScreen) newScreen.style.animation = '';
+    
+    if (activeScreen) {
+        activeScreen.classList.add("exiting");
+        activeScreen.addEventListener("animationend", function onEnd() {
+            activeScreen.classList.remove("active", "exiting");
+            newScreen.classList.add("active");
+            activeScreen.removeEventListener("animationend", onEnd);
+        }, { once: true });
+    } else {
+        newScreen.classList.add("active");
+    }
+}
+
+function switchScreenInstantly(screenId) {
+    const activeScreen = document.querySelector(".screen.active");
+    const newScreen = document.getElementById(screenId);
+    if (activeScreen) {
+        activeScreen.classList.remove("active", "exiting");
+    }
+    if (newScreen) {
+        newScreen.classList.add("active");
+    }
+}
+
+function proceedToSetup(){soundStartOrDraw.play(),switchScreen("setup-screen")}
+function proceedToHusbandPrize(){husband.name=document.getElementById("husband-name").value.trim(),wife.name=document.getElementById("wife-name").value.trim(),husband.name&&wife.name?(document.getElementById("husband-prize-title").innerText=`🎁 הפרס שלך, ${husband.name}`,switchScreen("husband-prize-screen")):(soundError.play(),alert("אין לכם שמות?🤔😉"))}
+function proceedToWifePrize(){husband.prize=document.getElementById("husband-prize").value.trim(),husband.prize?(document.getElementById("wife-prize-title").innerText=`🎁 הפרס שלך, ${wife.name}`,switchScreen("wife-prize-screen")):(soundError.play(),alert("לא רוצה מתנות? אין כזה דבר... :)"))}
+async function startGame(){wife.prize=document.getElementById("wife-prize").value.trim();if(!wife.prize){soundError.play();alert("לא רוצה מתנות? אין כזה דבר...:)");return}husband.score=0,wife.score=0,husband.usedSharingQuestions=[],wife.usedSharingQuestions=[],tempAcquaintanceHusband=[...acquaintanceQuestions_forHusband],tempAcquaintanceWife=[...acquaintanceQuestions_forWife],tempEmpowermentHusband=[...empowermentQuestions_forHusband],tempEmpowermentWife=[...empowermentQuestions_forWife];await triggerStageTransition('acquaintance', 'game-screen', true);}
+function getStageInfo(round){return round<=8?{name:"מבחן ההיכרות",stage:"acquaintance",stageRound:round}:round<=16?{name:"שאלות שיתוף",stage:"sharing",stageRound:round-8}:{name:"שאלות העצמה",stage:"empowerment",stageRound:round-16}}
+function resetTurn(){updateGenderedText(),document.getElementById("result").innerHTML='<div class="placeholder-text">לחצו על הכפתור...</div>',document.getElementById("draw-btn").style.display="inline-block",document.getElementById("finish-turn-btn").style.display="none",document.getElementById("difficulty-container").style.display="none",document.getElementById("change-buttons").style.display="none"}
+
+function updateGenderedText() {
+    const playerInfo = "husband" === currentPlayer ? husband : wife;
+    const { name: stageName, stage, stageRound } = getStageInfo(currentRound);
+
+    document.getElementById("turn-indicator").innerText = `${stageName}: סבב ${Math.ceil(stageRound / 2)} מתוך 4`;
+    document.getElementById("current-player-display").className = `current-player-display ${currentPlayer}`;
+
+    const actionVerb = (stage === 'sharing') ? 'לשתף' : 'לענות';
+
+    if ("husband" === currentPlayer) {
+        document.getElementById("turn-prompt").innerText = `תורו של ${playerInfo.name} ${actionVerb}`;
+        document.getElementById("draw-btn").innerText = "🎲 שלוף שאלה";
+    } else { 
+        document.getElementById("turn-prompt").innerText = `תורה של ${playerInfo.name} ${actionVerb}`;
+        document.getElementById("draw-btn").innerText = "🎲 שלפי שאלה";
+    }
+}
+
+function drawQuestion() {
+    soundStartOrDraw.play();
+    const btn = document.getElementById("draw-btn"), resultDiv = document.getElementById("result");
+    btn.disabled = true;
+    resultDiv.innerHTML = '<div class="placeholder-text drawing-animation">בוחרים לכם שאלה...</div>';
+
+    setTimeout(() => {
+        const { stage } = getStageInfo(currentRound);
+        let htmlContent = "";
+
+        if (stage === 'acquaintance') {
+            let questionText = "";
+            const isHusband = currentPlayer === 'husband';
+            const pool = isHusband ? tempAcquaintanceHusband : tempAcquaintanceWife;
+            const partnerName = isHusband ? wife.name : husband.name;
+            if (pool.length > 0) {
+                const qIndex = Math.floor(Math.random() * pool.length);
+                questionText = pool.splice(qIndex, 1)[0].name;
+            } else {
+                questionText = (isHusband ? acquaintanceQuestions_forHusband[0] : acquaintanceQuestions_forWife[0]).name;
+            }
+            htmlContent = `<div class="question-text">${questionText.replace('{name}', `<span class="partner-name-highlight">${partnerName}</span>`)}</div>`;
+        } else if (stage === 'sharing') {
+            const answerman = (currentPlayer === 'husband') ? husband : wife;
+            let isUnique = false, attempts = 0;
+            do {
+                currentEmotion = allEmotions[Math.floor(Math.random() * allEmotions.length)];
+                const emotionCategory = emotionGroup1.includes(currentEmotion) ? "A" : emotionGroup2.includes(currentEmotion) ? "B" : "C";
+                const pool = "husband" === currentPlayer ? (emotionCategory === "A" ? questionPoolA_male : emotionCategory === "B" ? questionPoolB_male : questionPoolC_male) : (emotionCategory === "A" ? questionPoolA_female : emotionCategory === "B" ? questionPoolB_female : questionPoolC_female);
+                currentQuestion = pool[Math.floor(Math.random() * pool.length)];
+                const combinedId = currentQuestion + currentEmotion;
+                if (!answerman.usedSharingQuestions.includes(combinedId)) {
+                    isUnique = true;
+                    answerman.usedSharingQuestions.push(combinedId);
+                }
+                attempts++;
+            } while (!isUnique && attempts < 100);
+            const questionParts = currentQuestion.split('___');
+            htmlContent = `<div class="question-text"><span class="question-part-1">${questionParts[0]}</span><span class="emotion-highlight">${currentEmotion}</span><span class="question-part-2">${questionParts[1] || ""}</span></div>`;
+        } else { // empowerment
+            let questionText = "";
+            const isHusband = currentPlayer === 'husband';
+            const pool = isHusband ? tempEmpowermentHusband : tempEmpowermentWife;
+            const partnerName = isHusband ? wife.name : husband.name;
+            if (pool.length > 0) {
+                const qIndex = Math.floor(Math.random() * pool.length);
+                questionText = pool.splice(qIndex, 1)[0].name;
+            } else {
+                questionText = (isHusband ? empowermentQuestions_forHusband[0] : empowermentQuestions_forWife[0]).name;
+            }
+            htmlContent = `<div class="question-text">${questionText.replace('{name}', `<span class="partner-name-highlight">${partnerName}</span>`)}</div>`;
+        }
+
+        updateDisplay(htmlContent);
+        btn.style.display = "none";
+        btn.disabled = false;
+
+        const finishBtn = document.getElementById("finish-turn-btn");
+        finishBtn.style.display = "inline-block";
+        if (stage === 'sharing') {
+            finishBtn.innerText = "שיתפתי";
+            document.getElementById("difficulty-container").style.display = "flex";
+        } else {
+            finishBtn.innerText = "עניתי!";
+        }
+    }, 1200);
+}
+
+
+function updateDisplay(htmlContent) {
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = htmlContent;
+    resultDiv.firstChild.classList.add("quick-fade-in");
+}
+
+function showChangeOptions() { document.getElementById("difficulty-container").style.display = "none"; document.getElementById("change-buttons").style.display = "flex"; }
+function hideChangeOptions() { document.getElementById("difficulty-container").style.display = "flex"; document.getElementById("change-buttons").style.display = "none"; }
+
+function changeQuestion() {
+    soundChange.play();
+    const answerman = (currentPlayer === 'husband') ? husband : wife;
+    const emotionCategory = emotionGroup1.includes(currentEmotion) ? "A" : emotionGroup2.includes(currentEmotion) ? "B" : "C";
+    const pool = "husband" === currentPlayer ? (emotionCategory === "A" ? questionPoolA_male : emotionCategory === "B" ? questionPoolB_male : questionPoolC_male) : (emotionCategory === "A" ? questionPoolA_female : emotionCategory === "B" ? questionPoolB_female : questionPoolC_female);
+    
+    let newQuestion, isUnique = false, attempts = 0;
+    do {
+        newQuestion = pool[Math.floor(Math.random() * pool.length)];
+        const combinedId = newQuestion + currentEmotion;
+        if (newQuestion !== currentQuestion && !answerman.usedSharingQuestions.includes(combinedId)) {
+            isUnique = true;
+            answerman.usedSharingQuestions.push(combinedId);
+        }
+        attempts++;
+    } while (!isUnique && attempts < 100);
+
+    currentQuestion = newQuestion;
+    const questionParts = currentQuestion.split('___');
+    const part1El = document.querySelector('.question-part-1');
+    const part2El = document.querySelector('.question-part-2');
+    
+    part1El.textContent = questionParts[0];
+    part2El.textContent = questionParts[1] || "";
+    
+    part1El.classList.remove('quick-fade-in');
+    part2El.classList.remove('quick-fade-in');
+    void part1El.offsetWidth;
+    part1El.classList.add('quick-fade-in');
+    part2El.classList.add('quick-fade-in');
+    hideChangeOptions();
+}
+
+function changeEmotion() {
+    soundChange.play();
+    const answerman = (currentPlayer === 'husband') ? husband : wife;
+    const emotionCategory = emotionGroup1.includes(currentEmotion) ? "A" : emotionGroup2.includes(currentEmotion) ? "B" : "C";
+    const emotionPool = (emotionCategory === "A" ? emotionGroup1 : emotionCategory === "B" ? emotionGroup2 : emotionGroup3);
+
+    let newEmotion, isUnique = false, attempts = 0;
+    do {
+        newEmotion = emotionPool[Math.floor(Math.random() * emotionPool.length)];
+        const combinedId = currentQuestion + newEmotion;
+        if (newEmotion !== currentEmotion && !answerman.usedSharingQuestions.includes(combinedId)) {
+            isUnique = true;
+            answerman.usedSharingQuestions.push(combinedId);
+        }
+        attempts++;
+    } while (!isUnique && attempts < 100);
+
+    currentEmotion = newEmotion;
+    const emotionEl = document.querySelector('.emotion-highlight');
+    emotionEl.textContent = currentEmotion;
+    emotionEl.classList.remove('quick-fade-in');
+    void emotionEl.offsetWidth;
+    emotionEl.classList.add('quick-fade-in');
+    hideChangeOptions();
+}
+
+function finishTurn(){
+    soundSuccess.play();
+    const scorer = "husband"===currentPlayer?wife:husband, answerman="husband"===currentPlayer?husband:wife;
+    const { stage } = getStageInfo(currentRound);
+    switchScreen("scoring-screen");
+    document.querySelectorAll(".scoring-stage-container").forEach(el => el.classList.remove('active'));
+    document.getElementById("scoring-title").innerText=`${scorer.name}, תורך לדרג`;
+
+    if (stage === 'acquaintance') {
+        document.getElementById("acquaintance-scoring").classList.add("active");
+        document.getElementById("acquaintance-label").innerText=`מ-1 (רחוק) עד 5 (בול!), כמה התשובה של ${answerman.name} הייתה נכונה?`;
+        document.getElementById("acquaintance-score").value=3;
+        updateScoreDisplay("acquaintance-score","acquaintance-display");
+    } else if (stage === 'sharing') {
+        document.getElementById("sharing-scoring").classList.add("active");
+        const isHusbandAnswering = currentPlayer === 'husband';
+        document.getElementById("honesty-label").innerText=`כנות: כמה הרגשת ש${answerman.name} ${isHusbandAnswering?"היה כן":"הייתה כנה"}?`;
+        document.getElementById("insight-label").innerText=`היכרות: כמה התשובה עזרה לך להכיר אות${isHusbandAnswering?"ו":"ה"} יותר טוב?`;
+        document.getElementById("honesty-score").value=5;
+        document.getElementById("insight-score").value=5;
+        updateScoreDisplay("honesty-score","honesty-display");
+        updateScoreDisplay("insight-score","insight-display");
+    } else {
+        document.getElementById("empowerment-scoring").classList.add("active");
+        document.getElementById("empowerment-label").innerText=`מ-1 עד 10, כמה התשובה של ${answerman.name} נגעה בך וריגשה אותך?`;
+        document.getElementById("empowerment-score").value=5;
+        updateScoreDisplay("empowerment-score","empowerment-display");
+    }
+}
+
+function updateScoreDisplay(inputId, displayId){document.getElementById(displayId).innerText = document.getElementById(inputId).value;}
+
+async function submitScore() { 
+    let score = 0;
+    const oldStageInfo = getStageInfo(currentRound);
+    const answerman = "husband" === currentPlayer ? husband : wife;
+
+    if (oldStageInfo.stage === 'acquaintance') {
+        score = parseInt(document.getElementById("acquaintance-score").value);
+    } else if (oldStageInfo.stage === 'sharing') {
+        score = parseInt(document.getElementById("honesty-score").value) + parseInt(document.getElementById("insight-score").value);
+    } else {
+        score = parseInt(document.getElementById("empowerment-score").value);
+    }
+    answerman.score += score;
+    currentRound++;
+    
+    if (currentRound > maxRounds) {
+        document.body.className = '';
+        endGame();
+    } else {
+        currentPlayer = "husband" === currentPlayer ? "wife" : "husband";
+        const newStageInfo = getStageInfo(currentRound);
+
+        if (newStageInfo.stage !== oldStageInfo.stage) {
+            await triggerStageTransition(newStageInfo.stage, 'game-screen');
+        } else {
+            switchScreen('game-screen');
+            resetTurn();
+        }
+    }
+}
+
+function endGame(){
+    soundEndGame.play();
+    const finalScoresEl=document.getElementById("final-scores"), winnerEl=document.getElementById("winner-announcement"), loserTaskEl=document.getElementById("loser-prize-task"), winnerTaskEl=document.getElementById("winner-prize-task");
+    finalScoresEl.innerHTML=`<h2><strong>${husband.name}:</strong> ${husband.score} נק' | <strong>${wife.name}:</strong> ${wife.score} נק'</h2>`;
+    loserTaskEl.innerHTML=""; winnerTaskEl.innerHTML="";
+    let winner, loser;
+    if (husband.score > wife.score) {
+        winner = husband; loser = wife;
+        winnerEl.innerHTML=`<h3>כל הכבוד, <span style="font-weight:bold;">${winner.name}</span>, ניצחת!</h3>`;
+        loserTaskEl.innerHTML=`<p>${loser.name}, הגיע הזמן להעניק ל${winner.name} את הפרס: <strong>${winner.prize}</strong></p>`;
+        winnerTaskEl.innerHTML=`<p>ו... ${winner.name}, עכשיו תורך להפתיע! <br> הענק ל${loser.name} את הפרס שביקשה, <strong>${loser.prize}</strong>, סתם כי אתם אוהבים ❤️.</p>`;
+    } else if (wife.score > husband.score) {
+        winner = wife; loser = husband;
+        winnerEl.innerHTML=`<h3>כל הכבוד, <span style="font-weight:bold;">${winner.name}</span>, ניצחת!</h3>`;
+        loserTaskEl.innerHTML=`<p>${loser.name}, הגיע הזמן להעניק ל${winner.name} את הפרס: <strong>${winner.prize}</strong></p>`;
+        winnerTaskEl.innerHTML=`<p>ו... ${winner.name}, עכשיו תורך להפתיע! <br> העניקי ל${loser.name} את הפרס שביקש, <strong>${loser.prize}</strong>, סתם כי אתם אוהבים ❤️.</p>`;
+    } else {
+        winnerEl.innerHTML="<h3>תיקו! במשחק הזה, שניכם ניצחתם! 🥳</h3>";
+        loserTaskEl.innerHTML=`<p>כל אחד מעניק לשני את הפרס שבחר. <br>${husband.name}, הענק ל${wife.name} את הפרס: <strong>${wife.prize}</strong></p>`;
+        winnerTaskEl.innerHTML=`<p>${wife.name}, העניקי ל${husband.name} את הפרס: <strong>${husband.prize}</strong></p>`;
+    }
+    switchScreen("end-screen");
+}
+
+// =================== START: THIS FUNCTION WAS MODIFIED ===================
+function triggerStageTransition(newStageName, nextScreenId, isFirstTime = false) {
+    return new Promise(resolve => {
+        const theme = stageThemes[newStageName];
+        const transitionScreen = document.getElementById('stage-transition-screen');
+        const mainContainer = document.getElementById('main-container');
+
+        mainContainer.style.transition = 'opacity 0.5s ease-in-out';
+        mainContainer.style.opacity = '0';
+
+        setTimeout(() => {
+            document.body.className = theme.className;
+            switchScreenInstantly(nextScreenId);
+            resetTurn();
+
+            const style = getComputedStyle(document.body);
+            transitionScreen.style.setProperty('--primary-glow', style.getPropertyValue('--primary-glow'));
+            transitionScreen.style.setProperty('--secondary-glow', style.getPropertyValue('--secondary-glow'));
+            document.getElementById('stage-transition-title').textContent = theme.title;
+            document.getElementById('stage-transition-description').textContent = theme.description;
+            document.getElementById('stage-transition-icon').textContent = theme.icon;
+            
+            transitionScreen.classList.add('visible');
+            soundStageTransition.play(); // Play sound for stage transition
+            
+            setTimeout(() => {
+                transitionScreen.classList.remove('visible');
+                setTimeout(() => {
+                    mainContainer.style.opacity = '1';
+                    resolve();
+                }, 500); 
+            }, 3500);
+        }, 500);
+    });
+}
+// =================== END: THIS FUNCTION WAS MODIFIED ===================
+
+document.addEventListener("DOMContentLoaded", function() {
+    // =================== START: THIS SECTION WAS ADDED ===================
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            const activeScreen = document.querySelector('.screen.active');
+            if (activeScreen) {
+                // Find visible main buttons in the active screen.
+                const visibleButtons = Array.from(activeScreen.querySelectorAll('.main-btn'))
+                                             .filter(btn => btn.style.display !== 'none');
+
+                // If there's exactly one visible main button, click it.
+                if (visibleButtons.length === 1) {
+                    event.preventDefault(); // Prevent default Enter behavior
+                    visibleButtons[0].click();
+                }
+            }
+        }
+    });
+    // =================== END: THIS SECTION WAS ADDED ===================
+
+    const audioCheck = new Audio('Sound files/1.mp3');
+    let checkCompleted = false;
+
+    const showExtractionError = () => {
+        if (checkCompleted) return;
+        checkCompleted = true;
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('extraction-error-screen').style.display = 'flex';
+    };
+
+    const proceedWithLoading = () => {
+        if (checkCompleted) return;
+        checkCompleted = true;
+        const mainContainer = document.getElementById("main-container");
+        let progress = 0;
+        const loadingBar = document.getElementById("loading-bar");
+        const loadingPercentage = document.getElementById("loading-percentage");
+
+        function updateProgress() {
+            progress += 5 + Math.random() * 10;
+            if (progress > 100) progress = 100;
+            loadingBar.style.width = progress + "%";
+            loadingPercentage.textContent = Math.floor(progress) + "%";
+            if (progress < 100) {
+                setTimeout(updateProgress, 150 + Math.random() * 200);
+            } else {
+                setTimeout(fadeLoadingScreen, 800);
+            }
+        }
+
+        function fadeLoadingScreen() {
+            const loadingScreen = document.getElementById("loading-screen");
+            loadingScreen.classList.add("fade-out");
+            loadingScreen.addEventListener("transitionend", () => {
+                loadingScreen.style.display = "none";
+                mainContainer.style.opacity = "1";
+                switchScreenInstantly("instructions-screen");
+            }, { once: true });
+        }
+        setTimeout(updateProgress, 500);
+    };
+
+    audioCheck.addEventListener('canplaythrough', proceedWithLoading);
+    audioCheck.addEventListener('error', showExtractionError);
+    setTimeout(() => {
+        if (!checkCompleted) {
+            showExtractionError();
+        }
+    }, 5000);
+});
+    </script>
+</body>
+</html>
